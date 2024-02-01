@@ -1,0 +1,245 @@
+--/* получение проектов с просроченными точками*/
+----select activity.activityid, activity."name"
+----from activity
+----where activityid in 
+----select parentactivityid  
+----from activityparents 
+----where activityid in (select activity.activityid 
+----from activityparents
+----join activity on activity.activityid = activityparents.activityid 
+----join point on point.pointid  = activity.activityid 
+----where
+----activityparents.parentactivityid  = (select activityid
+----from activity 
+----where name in ('Портфель проектов Зайцев А.В.')) and 
+----activityparents."level" != 0 and
+----point.factdate isnull and 
+----point.plandate < current_date)
+----group by parentactivityid 
+--
+----Этот запрос выбирает строки, где значение уровня (level) является вторым по величине для каждой активности (activity).
+with points_time_off as (
+	select 
+	activityparents.parentactivityid, 
+	activityparents.activityid, 
+	activityparents."level",
+	activity."name",
+	activity.code 
+	from activityparents
+	join activity on activityparents.activityid = activity.activityid 
+	where activityparents.activityid in (select activity.activityid 
+		from activityparents
+		join activity on activity.activityid = activityparents.activityid 
+		join point on point.pointid  = activity.activityid 
+		where
+			activityparents.parentactivityid  = (select activityid
+			from activity 
+			where name in ('Портфель проектов Зайцев А.В.')) and 
+			activityparents."level" != 0 and
+			point.factdate isnull and 
+			point.plandate < current_date)
+)
+select distinct points_time_off.parentactivityid as activityid , activity."name", points_time_off.code
+from points_time_off
+join activity on points_time_off.parentactivityid = activity.activityid
+where (points_time_off.activityid, points_time_off.level) in (
+	select activityid, MIN(level) as level
+	from points_time_off
+	where (activityid, level) not in (
+		select activityid, MIN("level") as "level"
+		from points_time_off
+		group by activityid
+		)
+		group by activityid
+		)
+		
+		
+select 
+distinct 
+activityparents.parentactivityid, 
+activity."name" as parentname,
+activity.code,
+activityparents.activityid, 
+a1.name,
+a1.code,
+activityparents."level",
+account."name"  as "foreman"
+from activityparents
+join activity  a1 on activityparents.activityid = a1.activityid 
+join activity on activityparents.parentactivityid = activity.activityid
+join roleassignment r on activity.activityid = r.dataid
+join role on role.roleid = r.roleid 
+join account on account.accountid  = r.accountid 
+where
+(role."name" = 'Руководитель' or role.name='Инициатор') and
+activityparents.activityid in (select activity.activityid 
+	from activityparents
+	join activity on activity.activityid = activityparents.activityid 
+	join point on point.pointid  = activity.activityid
+	where
+		activityparents.parentactivityid  = (select activityid
+		from activity 
+		where name in ('Портфель проектов Зайцев А.В.')) and 
+		activityparents."level" != 0 and
+		point.factdate isnull and 
+		point.plandate < current_date)
+--
+--
+--		
+--		
+--		
+--select activity.activityid, activity.name, parentid 
+--from resourceplan
+--join activity  on resourceplan.activityid = activity.activityid 
+--where resourceplan.accountid = 136170
+--
+--
+--
+--select activityid
+--			from activity 
+--			where name in ('Портфель проектов Зайцев А.В.', 'Портфель проектов Байдаков С.Л.')
+--
+--			
+--select activity.activityid 
+--		from activityparents
+--		join activity on activity.activityid = activityparents.activityid 
+--		join point on point.pointid  = activity.activityid 
+--		where
+--			activityparents.parentactivityid  in (select activityid
+--			from activity 
+--			where name in ('Портфель проектов Зайцев А.В.', 'Портфель проектов Байдаков С.Л.')) and 
+--			activityparents."level" != 0 and
+--			point.factdate isnull and 
+--			point.plandate < current_date
+--			
+--			
+--with points_time_off as (
+--	select 
+--	activityparents.parentactivityid, 
+--	activityparents.activityid, 
+--	activityparents."level",
+--	activity."name",
+--	activity.code 
+--	from activityparents
+--	join activity on activityparents.activityid = activity.activityid 
+--	where activityparents.activityid in (select activity.activityid 
+--		from activityparents
+--		join activity on activity.activityid = activityparents.activityid 
+--		join point on point.pointid  = activity.activityid 
+--		where
+--			activityparents.parentactivityid  in (select activityid
+--			from activity 
+--			where name in ('Портфель проектов Зайцев А.В.', 'Портфель проектов Байдаков С.Л.', 'Портфель проектов Ющук В.Н.')) and 
+--			activityparents."level" != 0 and
+--			point.factdate isnull and 
+--			point.plandate < current_date)
+--)
+--select distinct parentactivityid, "name", code
+--from points_time_off
+--where (activityid, level) in (
+--	select activityid, MIN(level) as level
+--	from points_time_off
+--	where (activityid, level) not in (
+--		select activityid, MIN("level") as "level"
+--		from points_time_off
+--		group by activityid
+--		)
+--		group by activityid
+--		)
+
+
+/* Получение id порфелей всех из списка */
+--select activityid, name
+--from activity 
+--where name in ('Портфель проектов Зайцев А.В.', 'Портфель проектов Байдаков С.Л.', 'Портфель проектов Ющук В.Н.')
+--
+--
+--select 
+--activityparents.parentactivityid, 
+--activityparents.activityid, 
+--activityparents."level",
+--activity."name",
+--point.plandate 
+--from activityparents
+--join activity on activityparents.activityid = activity.activityid
+--join point on activity.activityid = point.pointid 
+--where activityparents.activityid in (select activity.activityid 
+--	from activityparents
+--	join activity on activity.activityid = activityparents.activityid 
+--	join point on point.pointid  = activity.activityid 
+--	where
+--		activityparents.parentactivityid in (select activityid
+--		from activity 
+--		where name in ('Портфель проектов Зайцев А.В.', 'Портфель проектов Байдаков С.Л.', 'Портфель проектов Ющук В.Н.')) and 
+--		activityparents."level" != 0 and
+--		point.factdate isnull and 
+--		point.plandate < current_date)
+
+
+--with 
+--	recursive RecursiveCTE as (
+--		select t1.activityid, t1.parentactivityid
+--		from overtime as t1
+--		join overtime as t on t1.parentactivityid = t.activityid
+--		join RecursiveCTE r on t.activityid = r.parentactivityid
+--	),
+--overtime as (
+--	select 
+--			activityparents.parentactivityid, 
+--			activityparents.activityid, 
+--			activityparents."level",
+--			activity."name",
+--			activity.code 
+--			from activityparents
+--			join activity on activityparents.activityid = activity.activityid 
+--			where activityparents.activityid in (select activity.activityid 
+--				from activityparents
+--				join activity on activity.activityid = activityparents.activityid 
+--				join point on point.pointid  = activity.activityid 
+--				where
+--					activityparents.parentactivityid in (select activityid
+--					from activity 
+--					where name in ('Портфель проектов Зайцев А.В.', 'Портфель проектов Байдаков С.Л.', 'Портфель проектов Ющук В.Н.')) and 
+--					activityparents."level" != 0 and
+--					point.factdate isnull and 
+--					point.plandate < current_date)
+--)
+--
+--select activityid, parentactivityid, lvl, path
+--from RecursiveCTE
+--
+--
+--
+--WITH RECURSIVE cte (activityid, parenactivitytid, level, path) AS (
+--  SELECT t2.activityid, t2.parentactivityid, t2.level, CAST(t1.name AS TEXT)
+--  FROM activity t1
+--  JOIN activityparents t2 ON t1.activityid = t2.activityid
+--  WHERE parentactivityid in (select activityid
+--					from activity 
+--					where name in ('Портфель проектов Зайцев А.В.', 'Портфель проектов Байдаков С.Л.', 'Портфель проектов Ющук В.Н.')) 
+--  UNION ALL
+--  SELECT t2.activityid, t2.parentactivityid, t2.level, CONCAT(path, ' -> ', t1.name)
+--  FROM activity t1
+--  JOIN activityparents t2 ON t1.activityid = t2.activityid
+--  INNER JOIN cte ON t2.parentactivityid = cte.activityid and t2.level < cte.level
+--)
+--SELECT path
+--FROM cte
+--ORDER BY path;
+--
+--
+--  SELECT t2.activityid, t2.parentactivityid, t2.level
+--  FROM activity t1
+--  JOIN activityparents t2 ON t1.activityid = t2.activityid
+--  
+--  
+--  select *
+--  from activity 
+--  join activityparents on activity.activityid  = activityparents.activityid ;
+--
+--select activityid
+--					from activity 
+--					where name in ('Портфель проектов Зайцев А.В.', 'Портфель проектов Байдаков С.Л.', 'Портфель проектов Ющук В.Н.')
+
+
+		
